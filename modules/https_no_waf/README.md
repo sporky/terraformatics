@@ -1,5 +1,6 @@
 # Just plain lazy..
 
+```
 variable "bigip_address" {}
 variable "bigip_username" {}
 variable "bigip_password" {}
@@ -40,3 +41,4 @@ variable "app_servers" {
     }
   ]
 }
+```
