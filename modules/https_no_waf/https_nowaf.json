@@ -1,0 +1,143 @@
+{
+  "class": "AS3",
+  "action": "deploy",
+  "persist": true,
+  "declaration": {
+    "class": "ADC",
+    "schemaVersion": "3.17.0",
+    "id": ${app_id},
+    "label": ${app},
+    "remark": "template version 1.0 - 2/11/2020",
+    "Common": {
+      "class": "Tenant",
+      "Shared": {
+        "class": "Application",
+        "template": "shared",
+        ${ip_label}: {
+          "class": "Service_Address",
+          "virtualAddress": ${public_ip}
+        }
+      }
+    },
+    ${tenant}: {
+      "class": "Tenant",
+      ${app}: {
+        "class": "Application",
+        "template": "generic",
+        ${analytics}: {
+            "class": "Analytics_Profile",
+            "collectedStatsInternalLogging": true,
+            "collectedStatsExternalLogging": false,
+            "capturedTrafficInternalLogging": false,
+            "capturedTrafficExternalLogging": false,
+            "collectPageLoadTime": true,
+            "collectClientSideStatistics": true,
+            "collectResponseCode": true,
+            "sessionCookieSecurity": "ssl-only",
+            "notificationBySyslog": false,
+            "notificationBySnmp": false,
+            "notificationByEmail": false,
+            "publishIruleStatistics": false,
+            "collectMaxTpsAndThroughput": true,
+            "collectUserSession": true,
+            "collectUrl": true,
+            "collectGeo": true,
+            "collectIp": true,
+            "collectSubnet": true,
+            "collectUserAgent": true,
+            "collectMethod": true,
+            "collectOsAndBrowser": true,
+            "sessionTimeoutMinutes": 5
+        },
+        ${app}: {
+          "class": "Service_HTTPS",
+          "virtualAddresses": [
+            {"use": ${fq_ip_label}}
+          ],
+          "virtualPort": ${public_port},
+          "profileAnalytics": {
+            "use": ${analytics}
+          },
+          "profileTCP": {
+            "use": ${tcp_profile}
+          },
+          "profileMultiplex": {
+            "use": ${one_connect_profile}
+          },
+          "profileHTTP": {
+            "use": ${http_profile}
+          },
+          "profileHTTPCompression": {
+            "use": ${compression_profile}
+          },
+          "persistenceMethods": [
+            {"use": ${persist_profile} }
+          ],
+          "redirect80": false,
+          "snat": "auto",
+          "pool": ${pool},
+          "allowVlans": [
+            { "bigip":${allowed_vlan} }
+           ],
+          "serverTLS": {"bigip":${client_ssl_profile}},
+          "clientTLS": {"bigip":${server_ssl_profile}}
+        },
+        ${pool}: {
+          "class": "Pool",
+          "monitors": [
+            { "use": ${monitor} }
+          ],
+          "members": 
+            ${pool_members}
+        },
+        ${persist_profile}: {
+            "class": "Persist",
+            "persistenceMethod": "cookie",
+            "alwaysSet": true,
+            "encrypt": true,
+            "passphrase": { 
+                "ciphertext": "Ym9vZ2VyaGVhZAo=",
+                "protected": "eyJhbGciOiJkaXIiLCJlbmMiOiJub25lIn0",
+                "ignoreChanges": true
+            },
+            "cookieName": "iLB1",
+            "cookieMethod": "insert",
+            "ttl": 1800,
+            "duration": 1800
+        },
+        ${tcp_profile}: {
+            "class": "TCP_Profile",
+            "sendBufferSize": 3081344,
+            "receiveWindowSize": 3081344,
+            "timeWaitTimeout": 1800
+        },
+        ${http_profile}: {
+            "class": "HTTP_Profile",
+            "xForwardedFor": true
+        },
+        ${one_connect_profile}: {
+            "class": "Multiplex_Profile",
+            "maxConnections": 10000,
+            "maxConnectionAge": 86400,
+            "maxConnectionReuse": 1000,
+            "sharePools": true
+        },
+        ${compression_profile}: {
+            "class": "HTTP_Compress"
+        },
+        ${monitor}: {
+            "class": "Monitor",
+            "adaptive": false,
+            "monitorType": "http",
+            "dscp": 0,
+            "interval": 5,
+            "timeout": 16,
+            "timeUntilUp": 0,
+            "ciphers": "DEFAULT",
+            "send": "HEAD / HTTP/1.0\r\n\r\n",
+            "receive": "HTTP/1.(0|1) (200|301|302|403|404)"
+        }
+      }
+    }
+  }
+}
