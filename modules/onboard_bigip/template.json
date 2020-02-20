@@ -1,0 +1,112 @@
+{
+    "schemaVersion": "1.9.0",
+    "class": "Device",
+    "async": true,  
+    "label": "Standalone BIGIP DO declaration",
+    "Common": {
+        "class": "Tenant",
+        "mySystem": {
+          "class": "System",
+          "hostname": ${hostname},
+          "cliInactivityTimeout": 1200,
+          "consoleInactivityTimeout": 1200,
+          "autoPhonehome": true
+        },
+        "sysAuth": {
+            "class": "Authentication",
+            "enabledSourceType": "activeDirectory",
+            "fallback": true,
+            "remoteUsersDefaults": {
+                "partitionAccess": "all",
+                "terminalAccess": "tmsh",
+                "role": "admin"
+            },
+            "ldap": {
+                "bindDn": "f5service@planetspork.com",
+                "bindPassword": ${f5service_password},
+                "checkRemoteRole": true,
+                "loginAttribute": "sAMAccountName",
+                "port": 389,
+                "searchScope": "sub",
+                "searchBaseDn": "CN=Users,DC=planetspork,DC=com",
+                "servers": [
+                    "pdc.planetspork.com"
+                ],
+                "version": 3
+            }
+        },
+        "dbvars": {
+        	"class": "DbVariables",
+        	"ui.advisory.enabled": true,
+        	"ui.advisory.color": "green",
+        	"ui.advisory.text": "Don't Break Things Much"
+        },
+        "admin": {
+            "class": "User",
+            "userType": "regular",
+            "password": ${admin_password},
+            "shell": "bash"
+        },
+        "root": {
+            "class": "User",
+            "userType": "root",
+            "oldPassword": "QjF0VvkW9yEqeySg",
+            "newPassword": ${root_password}
+        },
+        "f5service": {
+          "class": "User",
+          "userType": "regular",
+          "password": ${f5service_password},
+          "partitionAccess": {
+            "all-partitions": {
+              "role": "admin"
+            }
+          }
+        },
+        "dmz1_private": {
+            "class": "SelfIp",
+            "address": ${dmz1_private},
+            "vlan": "dmz1",
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "dmz1-public": {
+            "class": "SelfIp",
+            "address": ${dmz1_public},
+            "vlan": "dmz1",
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "dmz2-private": {
+            "class": "SelfIp",
+            "address": ${dmz2_private},
+            "vlan": "dmz2",
+            "allowService": "default",
+            "trafficGroup": "traffic-group-local-only"
+        },
+        "default": {
+            "class": "Route",
+            "gw": ${default_route},
+            "network": "default",
+            "mtu": 1500
+        },
+        "ntp-config": {
+            "class": "NTP",
+            "servers": [
+                "0.pool.ntp.org",
+                "1.pool.ntp.org",
+                "2.pool.ntp.org"
+            ],
+            "timezone": "UTC"
+        },
+        "dns-config": {
+            "class": "DNS",
+            "nameServers": [
+                "205.170.190.102"
+            ],
+            "search": [
+                "planetspork.com"
+            ]
+        }
+    }
+}
